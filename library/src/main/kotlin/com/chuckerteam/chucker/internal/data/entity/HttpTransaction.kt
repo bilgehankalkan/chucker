@@ -53,7 +53,8 @@ internal class HttpTransaction(
     @ColumnInfo(name = "responseHeadersSize") var responseHeadersSize: Long?,
     @ColumnInfo(name = "responseBody") var responseBody: String?,
     @ColumnInfo(name = "isResponseBodyEncoded") var isResponseBodyEncoded: Boolean = false,
-    @ColumnInfo(name = "responseImageData") var responseImageData: ByteArray?
+    @ColumnInfo(name = "responseImageData") var responseImageData: ByteArray?,
+    @ColumnInfo(name = "requestTag") var requestTag: String?
 ) {
 
     @Ignore
@@ -82,7 +83,8 @@ internal class HttpTransaction(
         responseHeaders = null,
         responseHeadersSize = null,
         responseBody = null,
-        responseImageData = null
+        responseImageData = null,
+        requestTag = null
     )
 
     enum class Status {
