@@ -49,14 +49,32 @@ internal class TransactionViewModel(transactionId: Long) : ViewModel() {
     fun encodeUrl(encode: Boolean) {
         mutableEncodeUrl.value = encode
     }
+
+    suspend fun onBodyLineItemClicked(url: String): Action {
+        val request = RepositoryProvider.transaction().getByUrl(url)
+
+        return if (request != null) {
+            Action.OpenTransaction(request.id)
+        } else {
+            Action.OpenUrl
+        }
+    }
 }
 
 internal class TransactionViewModelFactory(
     private val transactionId: Long = 0L
 ) : ViewModelProvider.NewInstanceFactory() {
+
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         require(modelClass == TransactionViewModel::class.java) { "Cannot create $modelClass" }
         @Suppress("UNCHECKED_CAST")
         return TransactionViewModel(transactionId) as T
     }
+}
+
+internal sealed class Action {
+
+    class OpenTransaction(val transactionId: Long) : Action()
+
+    object OpenUrl : Action()
 }

@@ -14,18 +14,56 @@ internal interface HttpTransactionDao {
 
     @Query(
         "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error FROM " +
+            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
             "transactions ORDER BY requestDate DESC"
     )
     fun getSortedTuples(): LiveData<List<HttpTransactionTuple>>
 
     @Query(
         "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error FROM " +
+            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+            "transactions WHERE requestTag IN (:requestTags) ORDER BY requestDate DESC"
+    )
+    fun getSortedTuples(requestTags: List<String?>): LiveData<List<HttpTransactionTuple>>
+
+    @Query(
+        "SELECT id, requestDate, tookMs, protocol, method, host, " +
+            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+            "transactions WHERE requestTag IN (:requestTags) OR requestTag IS NULL ORDER BY requestDate DESC"
+    )
+    fun getSortedTuplesWithNoRequestTags(requestTags: List<String?>): LiveData<List<HttpTransactionTuple>>
+
+    @Query(
+        "SELECT id, requestDate, tookMs, protocol, method, host, " +
+            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
             "transactions WHERE responseCode LIKE :codeQuery AND path LIKE :pathQuery " +
             "ORDER BY requestDate DESC"
     )
     fun getFilteredTuples(codeQuery: String, pathQuery: String): LiveData<List<HttpTransactionTuple>>
+
+    @Query(
+        "SELECT id, requestDate, tookMs, protocol, method, host, " +
+            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+            "transactions WHERE responseCode LIKE :codeQuery AND path LIKE :pathQuery " +
+            "AND requestTag IN (:requestTags) ORDER BY requestDate DESC"
+    )
+    fun getFilteredTuples(
+        codeQuery: String,
+        pathQuery: String,
+        requestTags: List<String?>
+    ): LiveData<List<HttpTransactionTuple>>
+
+    @Query(
+        "SELECT id, requestDate, tookMs, protocol, method, host, " +
+            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+            "transactions WHERE responseCode LIKE :codeQuery AND path LIKE :pathQuery " +
+            "AND requestTag IN (:requestTags) OR requestTag IS NULL ORDER BY requestDate DESC"
+    )
+    fun getFilteredTuplesWithNoRequestTags(
+        codeQuery: String,
+        pathQuery: String,
+        requestTags: List<String?>
+    ): LiveData<List<HttpTransactionTuple>>
 
     @Insert
     suspend fun insert(transaction: HttpTransaction): Long?
@@ -44,4 +82,10 @@ internal interface HttpTransactionDao {
 
     @Query("SELECT * FROM transactions")
     suspend fun getAll(): List<HttpTransaction>
+
+    @Query("SELECT * FROM transactions WHERE url = :url LIMIT 1")
+    suspend fun getByUrl(url: String): HttpTransaction?
+
+    @Query("SELECT DISTINCT requestTag FROM transactions WHERE requestTag NOT NULL ORDER BY requestTag ASC")
+    suspend fun getAllRequestTags(): List<String>
 }

@@ -68,6 +68,7 @@ internal class HttpTransactionDaoTest {
             assertThat(stringValue("responseMessage")).isEqualTo(data.responseMessage)
             assertThat(stringValue("responseBody")).isEqualTo(data.responseBody)
             assertThat(stringValue("error")).isEqualTo(data.error)
+            assertThat(stringValue("requestTag")).isEqualTo(data.requestTag)
         }
     }
 
@@ -217,6 +218,28 @@ internal class HttpTransactionDaoTest {
         testObject.getFilteredTuples(codeQuery = "4%", pathQuery = "%").observeForever { result ->
             assertTuples(listOf(transactionThree, transactionOne), result)
         }
+    }
+
+    @Test
+    fun `get a transaction by URL`() = runBlocking {
+        val firstTransaction = createRequest("abc")
+        insertTransaction(firstTransaction)
+        val secondTransaction = createRequest()
+        insertTransaction(secondTransaction)
+
+        val result = testObject.getByUrl(firstTransaction.url!!)
+        assertTransaction(firstTransaction.id, firstTransaction, result)
+    }
+
+    @Test
+    fun `do not get a transaction by URL`() = runBlocking {
+        val firstTransaction = createRequest("abc")
+        insertTransaction(firstTransaction)
+        val secondTransaction = createRequest()
+        insertTransaction(secondTransaction)
+
+        val result = testObject.getByUrl("abcdef")
+        assertThat(result).isNull()
     }
 
     private suspend fun insertTransaction(transaction: HttpTransaction) {

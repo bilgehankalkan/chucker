@@ -2,6 +2,7 @@ package com.chuckerteam.chucker.internal.ui.transaction
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -264,7 +265,8 @@ internal class TransactionPayloadFragment :
                     result.add(TransactionPayloadItem.BodyLineItem(SpannableStringBuilder.valueOf(text)))
                 }
                 else -> bodyString.lines().forEach {
-                    result.add(TransactionPayloadItem.BodyLineItem(SpannableStringBuilder.valueOf(it)))
+                    val bodyLineItemCreator = BodyLineItemCreator(it, ::onBodyLineItemClicked)
+                    result.add(TransactionPayloadItem.BodyLineItem(bodyLineItemCreator.create()))
                 }
             }
 
@@ -294,6 +296,13 @@ internal class TransactionPayloadFragment :
                 return@withContext false
             }
             return@withContext true
+        }
+    }
+
+    private fun onBodyLineItemClicked(url: String) = lifecycleScope.launch {
+        when (val action = viewModel.onBodyLineItemClicked(url)) {
+            is Action.OpenTransaction -> TransactionActivity.start(requireContext(), action.transactionId)
+            is Action.OpenUrl -> startActivity(Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(url) })
         }
     }
 
