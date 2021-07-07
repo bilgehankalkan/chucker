@@ -7,8 +7,11 @@
         android:title="@string/chucker_search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="collapseActionView|ifRoom" />
-    <item
-        android:id="@+id/export"
+    <item android:id="@+id/filter"
+        android:title="@string/chucker_filter"
+        android:icon="@drawable/chucker_ic_filter_white"
+        app:showAsAction="ifRoom" />
+    <item android:id="@+id/export"
         android:icon="@drawable/chucker_ic_share_white"
         android:title="@string/chucker_export"
         app:showAsAction="ifRoom">

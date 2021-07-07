@@ -21,6 +21,7 @@ import com.chuckerteam.chucker.internal.support.TransactionDetailsHarSharable
 import com.chuckerteam.chucker.internal.support.TransactionListDetailsSharable
 import com.chuckerteam.chucker.internal.support.shareAsFile
 import com.chuckerteam.chucker.internal.support.showDialog
+import com.chuckerteam.chucker.internal.ui.filter.FilterDialogFragment
 import com.chuckerteam.chucker.internal.ui.transaction.TransactionActivity
 import com.chuckerteam.chucker.internal.ui.transaction.TransactionAdapter
 import kotlinx.coroutines.launch
@@ -120,6 +121,10 @@ internal class MainActivity :
                     },
                     onNegativeClick = null
                 )
+                true
+            }
+            R.id.filter -> {
+                FilterDialogFragment.show(supportFragmentManager, this, viewModel::updateRequestTags)
                 true
             }
             else -> {
