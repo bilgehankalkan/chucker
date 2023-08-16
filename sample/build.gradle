@@ -1,17 +1,19 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.squareup.wire'
+apply plugin: 'com.apollographql.apollo3'
 
 wire {
     kotlin {}
 }
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdk rootProject.compileSdkVersion
+    namespace "com.chuckerteam.chucker.sample"
 
     defaultConfig {
-        minSdkVersion rootProject.minSdkVersion
-        targetSdkVersion rootProject.targetSdkVersion
+        minSdk rootProject.minSdkVersion
+        targetSdk rootProject.targetSdkVersion
         applicationId "com.chuckerteam.chucker.sample"
         versionName VERSION_NAME
         versionCode VERSION_CODE.toInteger()
@@ -53,11 +55,23 @@ android {
     }
 }
 
+apollo {
+    service("rickandmortyapi") {
+        packageName.set("com.chuckerteam.chucker.sample")
+        schemaFile.set(file("src/main/graphql/com/chuckerteam/chucker/sample/schema.json.graphql"))
+        srcDir("src/main/graphql")
+        excludes.add("**/schema.json.graphql")
+        excludes.add("**/schema.json")
+    }
+}
+
 dependencies {
     debugImplementation project(':library')
     releaseImplementation project(':library-no-op')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion"
+    implementation "androidx.activity:activity-ktx:$activityVersion"
 
     implementation "com.google.android.material:material:$materialComponentsVersion"
     implementation "androidx.appcompat:appcompat:$appCompatVersion"
@@ -66,6 +80,8 @@ dependencies {
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttpVersion"
     implementation "com.squareup.retrofit2:retrofit:$retrofitVersion"
     implementation "com.squareup.retrofit2:converter-gson:$retrofitVersion"
+
+    implementation "com.apollographql.apollo3:apollo-runtime:$apolloVersion"
 
     debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakcanaryVersion"
 }

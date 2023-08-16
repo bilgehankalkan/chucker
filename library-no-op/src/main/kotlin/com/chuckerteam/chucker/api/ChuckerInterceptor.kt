@@ -9,9 +9,9 @@ import java.io.IOException
 /**
  * No-op implementation.
  */
-@Suppress("UnusedPrivateMember")
+@Suppress("UnusedPrivateMember", "UNUSED_PARAMETER")
 public class ChuckerInterceptor private constructor(
-    builder: Builder,
+    builder: Builder
 ) : Interceptor {
 
     /**
@@ -47,6 +47,8 @@ public class ChuckerInterceptor private constructor(
         public fun addBodyDecoder(decoder: Any): Builder = this
 
         public fun createShortcut(enable: Boolean): Builder = this
+
+        public fun skipPaths(vararg paths: String): Builder = this
 
         public fun build(): ChuckerInterceptor = ChuckerInterceptor(this)
     }

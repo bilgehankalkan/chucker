@@ -2,7 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdk rootProject.compileSdkVersion
+    namespace "com.chuckerteam.chucker"
 
     compileOptions {
         kotlinOptions.freeCompilerArgs += [
@@ -16,7 +17,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion rootProject.minSdkVersion
+        minSdk rootProject.minSdkVersion
     }
 
     lintOptions {
@@ -26,6 +27,13 @@ android {
         disable 'RtlEnabled'
         // Don't fail build if some dependencies outdated
         disable 'GradleDependency'
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
     }
 }
 

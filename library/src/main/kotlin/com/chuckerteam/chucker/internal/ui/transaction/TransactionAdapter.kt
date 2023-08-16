@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.ImageViewCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -22,18 +23,27 @@ import javax.net.ssl.HttpsURLConnection
 
 internal class TransactionAdapter internal constructor(
     context: Context,
-    private val onTransactionClick: (Long) -> Unit,
-) : ListAdapter<HttpTransactionTuple, TransactionAdapter.TransactionViewHolder>(TransactionDiffCallback) {
+    private val onTransactionClick: (Long) -> Unit
+) : ListAdapter<HttpTransactionTuple, TransactionAdapter.TransactionViewHolder>(
+    TransactionDiffCallback
+) {
 
     private val colorDefault: Int = ContextCompat.getColor(context, R.color.chucker_status_default)
-    private val colorRequested: Int = ContextCompat.getColor(context, R.color.chucker_status_requested)
+    private val colorRequested: Int = ContextCompat.getColor(
+        context,
+        R.color.chucker_status_requested
+    )
     private val colorError: Int = ContextCompat.getColor(context, R.color.chucker_status_error)
     private val color500: Int = ContextCompat.getColor(context, R.color.chucker_status_500)
     private val color400: Int = ContextCompat.getColor(context, R.color.chucker_status_400)
     private val color300: Int = ContextCompat.getColor(context, R.color.chucker_status_300)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionViewHolder {
-        val viewBinding = ChuckerListItemTransactionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val viewBinding = ChuckerListItemTransactionBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
         return TransactionViewHolder(viewBinding)
     }
 
@@ -59,6 +69,7 @@ internal class TransactionAdapter internal constructor(
             transactionId = transaction.id
 
             itemBinding.apply {
+                displayGraphQlFields(transaction.graphQlOperationName, transaction.graphQlDetected)
                 path.text = "${transaction.method} ${transaction.getFormattedPath(encode = false)}"
                 host.text = transaction.host
                 timeStart.text = DateFormat.getTimeInstance().format(transaction.requestDate)
@@ -92,7 +103,12 @@ internal class TransactionAdapter internal constructor(
         }
 
         private fun setProtocolImage(resources: ProtocolResources) {
-            itemBinding.ssl.setImageDrawable(AppCompatResources.getDrawable(itemView.context, resources.icon))
+            itemBinding.ssl.setImageDrawable(
+                AppCompatResources.getDrawable(
+                    itemView.context,
+                    resources.icon
+                )
+            )
             ImageViewCompat.setImageTintList(
                 itemBinding.ssl,
                 ColorStateList.valueOf(ContextCompat.getColor(itemView.context, resources.color))
@@ -112,5 +128,17 @@ internal class TransactionAdapter internal constructor(
             itemBinding.code.setTextColor(color)
             itemBinding.path.setTextColor(color)
         }
+    }
+}
+
+private fun ChuckerListItemTransactionBinding.displayGraphQlFields(
+    graphQlOperationName: String?,
+    graphQLDetected: Boolean
+) {
+    graphqlIcon.isVisible = graphQLDetected
+    graphqlPath.isVisible = graphQLDetected
+
+    if (graphQLDetected) {
+        graphqlPath.text = graphQlOperationName ?: root.resources.getString(R.string.chucker_graphql_operation_is_empty)
     }
 }

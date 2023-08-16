@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.chuckerteam.chucker.internal.data.repository
 
 import androidx.lifecycle.LiveData
@@ -34,4 +36,6 @@ internal interface HttpTransactionRepository {
     suspend fun getByUrl(url: String): HttpTransaction?
 
     suspend fun getAllRequestTags(): List<String>
+
+    fun getTransactionsInTimeRange(minTimestamp: Long?): List<HttpTransaction>
 }

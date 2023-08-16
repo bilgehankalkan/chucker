@@ -1,9 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.devtools.ksp'
 
 android {
-    compileSdkVersion rootProject.compileSdkVersion
+    compileSdk rootProject.compileSdkVersion
+    namespace "com.chuckerteam.chucker"
 
     compileOptions {
         kotlinOptions.freeCompilerArgs += [
@@ -13,9 +15,10 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion rootProject.minSdkVersion
+        minSdk rootProject.minSdkVersion
         consumerProguardFiles 'proguard-rules.pro'
         resValue("string", "chucker_version", "$VERSION_NAME")
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
@@ -42,6 +45,13 @@ android {
     }
 
     resourcePrefix 'chucker_'
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
@@ -57,7 +67,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.room:room-runtime:$roomVersion"
-    kapt "androidx.room:room-compiler:$roomVersion"
+    ksp "androidx.room:room-compiler:$roomVersion"
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion"
 
@@ -79,6 +89,12 @@ dependencies {
     testImplementation "androidx.arch.core:core-testing:$androidXCoreVersion"
     testImplementation "com.google.truth:truth:$truthVersion"
     testImplementation "org.robolectric:robolectric:$robolectricVersion"
+
+    androidTestImplementation "junit:junit:$junit4Version"
+    androidTestImplementation "androidx.test:runner:$androidXTestRunner"
+    androidTestImplementation "androidx.test:rules:$androidXTestRules"
+    androidTestImplementation "com.google.truth:truth:$truthVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidXTestExt"
 }
 
 apply from: rootProject.file('gradle/gradle-mvn-push.gradle')

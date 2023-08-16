@@ -2,8 +2,11 @@
 
 package com.chuckerteam.chucker.internal.data.entity
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
@@ -11,6 +14,7 @@ import androidx.room.PrimaryKey
 import com.chuckerteam.chucker.internal.support.FormatUtils
 import com.chuckerteam.chucker.internal.support.FormattedUrl
 import com.chuckerteam.chucker.internal.support.JsonConverter
+import com.chuckerteam.chucker.internal.support.SpanTextUtil
 import com.google.gson.reflect.TypeToken
 import okhttp3.Headers
 import okhttp3.HttpUrl
@@ -25,7 +29,8 @@ import java.util.Date
 @Suppress("LongParameterList")
 @Entity(tableName = "transactions")
 internal class HttpTransaction(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id")
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
     var id: Long = 0,
     @ColumnInfo(name = "requestDate") var requestDate: Long?,
     @ColumnInfo(name = "responseDate") var responseDate: Long?,
@@ -54,7 +59,9 @@ internal class HttpTransaction(
     @ColumnInfo(name = "responseBody") var responseBody: String?,
     @ColumnInfo(name = "isResponseBodyEncoded") var isResponseBodyEncoded: Boolean = false,
     @ColumnInfo(name = "responseImageData") var responseImageData: ByteArray?,
-    @ColumnInfo(name = "requestTag") var requestTag: String?
+    @ColumnInfo(name = "requestTag") var requestTag: String?,
+    @ColumnInfo(name = "graphQlDetected") var graphQlDetected: Boolean = false,
+    @ColumnInfo(name = "graphQlOperationName") var graphQlOperationName: String?
 ) {
 
     @Ignore
@@ -84,7 +91,8 @@ internal class HttpTransaction(
         responseHeadersSize = null,
         responseBody = null,
         responseImageData = null,
-        requestTag = null
+        requestTag = null,
+        graphQlOperationName = null
     )
 
     enum class Status {
@@ -158,6 +166,11 @@ internal class HttpTransaction(
         requestHeaders = JsonConverter.instance.toJson(headers)
     }
 
+    fun setGraphQlOperationName(headers: Headers) {
+        graphQlOperationName = toHttpHeaderList(headers)
+            .find { it.name.lowercase().contains("operation-name") }?.value
+    }
+
     fun getParsedRequestHeaders(): List<HttpHeader>? {
         return JsonConverter.instance.fromJson<List<HttpHeader>>(
             requestHeaders,
@@ -209,6 +222,25 @@ internal class HttpTransaction(
         }
     }
 
+    /**
+     * This method creates [android.text.SpannableString] from body
+     * and add [ForegroundColorSpan] to text with different colors for better contrast between
+     * keys and values and etc in the body.
+     *
+     * This method just works with json content-type yet, and calls [formatBody]
+     * for other content-type until parser function will be developed for other content-types.
+     */
+    private fun spanBody(body: CharSequence, contentType: String?, context: Context?): CharSequence {
+        return when {
+            // TODO Implement Other Content Types
+            contentType.isNullOrBlank() -> body
+            contentType.contains("json", ignoreCase = true) && context != null -> {
+                SpanTextUtil(context).spanJson(body)
+            }
+            else -> formatBody(body.toString(), contentType)
+        }
+    }
+
     private fun formatBytes(bytes: Long): String {
         return FormatUtils.formatByteCount(bytes, true)
     }
@@ -217,8 +249,19 @@ internal class HttpTransaction(
         return requestBody?.let { formatBody(it, requestContentType) } ?: ""
     }
 
+    fun getSpannedRequestBody(context: Context?): CharSequence {
+        return requestBody?.let { spanBody(it, requestContentType, context) }
+            ?: SpannableStringBuilder.valueOf("")
+    }
+
     fun getFormattedResponseBody(): String {
         return responseBody?.let { formatBody(it, responseContentType) } ?: ""
+    }
+
+    fun getSpannedResponseBody(context: Context?): CharSequence {
+        return responseBody?.let {
+            spanBody(it, responseContentType, context)
+        } ?: SpannableStringBuilder.valueOf("")
     }
 
     fun populateUrl(httpUrl: HttpUrl): HttpTransaction {
@@ -249,8 +292,11 @@ internal class HttpTransaction(
     }
 
     fun getHarResponseBodySize(): Long {
-        return if (responseCode == HttpURLConnection.HTTP_NOT_MODIFIED) 0
-        else responsePayloadSize ?: 0
+        return if (responseCode == HttpURLConnection.HTTP_NOT_MODIFIED) {
+            0
+        } else {
+            responsePayloadSize ?: 0
+        }
     }
 
     // Not relying on 'equals' because comparison be long due to request and response sizes
@@ -287,6 +333,8 @@ internal class HttpTransaction(
             (responseHeadersSize == other.responseHeadersSize) &&
             (responseBody == other.responseBody) &&
             (isResponseBodyEncoded == other.isResponseBodyEncoded) &&
-            (responseImageData?.contentEquals(other.responseImageData ?: byteArrayOf()) != false)
+            (responseImageData?.contentEquals(other.responseImageData ?: byteArrayOf()) != false) &&
+            (graphQlOperationName == other.graphQlOperationName) &&
+            (graphQlDetected == other.graphQlDetected)
     }
 }

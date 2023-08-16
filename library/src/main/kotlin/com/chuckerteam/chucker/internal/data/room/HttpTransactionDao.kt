@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.chuckerteam.chucker.internal.data.room
 
 import androidx.lifecycle.LiveData
@@ -13,49 +15,55 @@ import com.chuckerteam.chucker.internal.data.entity.HttpTransactionTuple
 internal interface HttpTransactionDao {
 
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
+            "requestPayloadSize, responsePayloadSize, error, requestTag, graphQLDetected, graphQlOperationName FROM " +
             "transactions ORDER BY requestDate DESC"
     )
     fun getSortedTuples(): LiveData<List<HttpTransactionTuple>>
 
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
+            "requestPayloadSize, responsePayloadSize, error, requestTag, graphQLDetected, graphQlOperationName FROM " +
             "transactions WHERE requestTag IN (:requestTags) ORDER BY requestDate DESC"
     )
     fun getSortedTuples(requestTags: List<String?>): LiveData<List<HttpTransactionTuple>>
 
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
+            "requestPayloadSize, responsePayloadSize, error, requestTag, graphQLDetected, graphQlOperationName FROM " +
             "transactions WHERE requestTag IN (:requestTags) OR requestTag IS NULL ORDER BY requestDate DESC"
     )
     fun getSortedTuplesWithNoRequestTags(requestTags: List<String?>): LiveData<List<HttpTransactionTuple>>
 
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
-            "transactions WHERE responseCode LIKE :codeQuery AND path LIKE :pathQuery " +
-            "ORDER BY requestDate DESC"
+        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
+            "requestPayloadSize, responsePayloadSize, error, requestTag, graphQLDetected, graphQlOperationName FROM " +
+            "transactions WHERE responseCode LIKE :codeQuery AND (path LIKE :pathQuery OR " +
+            "graphQlOperationName LIKE :graphQlQuery) ORDER BY requestDate DESC"
     )
-    fun getFilteredTuples(codeQuery: String, pathQuery: String): LiveData<List<HttpTransactionTuple>>
+    fun getFilteredTuples(
+        codeQuery: String,
+        pathQuery: String,
+        graphQlQuery: String = ""
+    ): LiveData<List<HttpTransactionTuple>>
 
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
-            "transactions WHERE responseCode LIKE :codeQuery AND path LIKE :pathQuery " +
+        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
+            "requestPayloadSize, responsePayloadSize, error, requestTag, graphQLDetected, " +
+            "graphQlOperationName FROM transactions WHERE responseCode LIKE :codeQuery " +
+            "AND (path LIKE :pathQuery OR graphQlOperationName LIKE :graphQlQuery) " +
             "AND requestTag IN (:requestTags) ORDER BY requestDate DESC"
     )
     fun getFilteredTuples(
         codeQuery: String,
         pathQuery: String,
+        graphQlQuery: String = "",
         requestTags: List<String?>
     ): LiveData<List<HttpTransactionTuple>>
 
     @Query(
-        "SELECT id, requestDate, tookMs, protocol, method, host, " +
-            "path, scheme, responseCode, requestPayloadSize, responsePayloadSize, error, requestTag FROM " +
+        "SELECT id, requestDate, tookMs, protocol, method, host, path, scheme, responseCode, " +
+            "requestPayloadSize, responsePayloadSize, error, requestTag, graphQLDetected, graphQlOperationName FROM " +
             "transactions WHERE responseCode LIKE :codeQuery AND path LIKE :pathQuery " +
             "AND requestTag IN (:requestTags) OR requestTag IS NULL ORDER BY requestDate DESC"
     )
@@ -72,13 +80,13 @@ internal interface HttpTransactionDao {
     suspend fun update(transaction: HttpTransaction): Int
 
     @Query("DELETE FROM transactions")
-    suspend fun deleteAll()
+    suspend fun deleteAll(): Int
 
     @Query("SELECT * FROM transactions WHERE id = :id")
     fun getById(id: Long): LiveData<HttpTransaction?>
 
     @Query("DELETE FROM transactions WHERE requestDate <= :threshold")
-    suspend fun deleteBefore(threshold: Long)
+    suspend fun deleteBefore(threshold: Long): Int
 
     @Query("SELECT * FROM transactions")
     suspend fun getAll(): List<HttpTransaction>
@@ -88,4 +96,7 @@ internal interface HttpTransactionDao {
 
     @Query("SELECT DISTINCT requestTag FROM transactions WHERE requestTag NOT NULL ORDER BY requestTag ASC")
     suspend fun getAllRequestTags(): List<String>
+
+    @Query("SELECT * FROM transactions WHERE requestDate >= :timestamp")
+    fun getTransactionsInTimeRange(timestamp: Long): List<HttpTransaction>
 }
