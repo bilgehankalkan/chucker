@@ -10,6 +10,12 @@ android {
             '-module-name', "com.github.ChuckerTeam.Chucker.library-no-op",
             "-Xexplicit-api=strict"
         ]
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlin {
+        jvmToolchain(17)
     }
 
     buildFeatures {
