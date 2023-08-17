@@ -74,9 +74,17 @@ internal class NotificationHelper(val context: Context) {
         }
     }
 
+    private fun canShowNotifications(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            notificationManager.areNotificationsEnabled()
+        } else {
+            true
+        }
+    }
+
     fun show(transaction: HttpTransaction) {
         addToBuffer(transaction)
-        if (!BaseChuckerActivity.isInForeground) {
+        if (!BaseChuckerActivity.isInForeground && canShowNotifications()) {
             val builder =
                 NotificationCompat.Builder(context, TRANSACTIONS_CHANNEL_ID)
                     .setContentIntent(transactionsScreenIntent)
@@ -89,7 +97,7 @@ internal class NotificationHelper(val context: Context) {
             val inboxStyle = NotificationCompat.InboxStyle()
             synchronized(transactionBuffer) {
                 var count = 0
-                (transactionBuffer.size() - 1 downTo 0).forEach { i ->
+                for (i in transactionBuffer.size() - 1 downTo 0) {
                     val bufferedTransaction = transactionBuffer.valueAt(i)
                     if ((bufferedTransaction != null) && count < BUFFER_SIZE) {
                         if (count == 0) {
@@ -110,8 +118,7 @@ internal class NotificationHelper(val context: Context) {
         }
     }
 
-    private fun createClearAction():
-        NotificationCompat.Action {
+    private fun createClearAction(): NotificationCompat.Action {
         val clearTitle = context.getString(R.string.chucker_clear)
         val clearTransactionsBroadcastIntent =
             Intent(context, ClearDatabaseJobIntentServiceReceiver::class.java)

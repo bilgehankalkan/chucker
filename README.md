@@ -7,23 +7,29 @@ _A fork of [Chuck](https://github.com/jgilfelt/chuck)_
   <img src="assets/ic_launcher-web.png" alt="chucker icon" width="30%"/>
 </p>
 
-* [Getting Started](#getting-started-)
-* [Features](#features-)
-  * [Multi-Window](#multi-window-)
-* [Configure](#configure-)
-  * [Redact-Header️](#redact-header-️)
-  * [Decode-Body](#decode-body-)
-* [Migrating](#migrating-)
-* [Snapshots](#snapshots-)
-* [FAQ](#faq-)
-* [Contributing](#contributing-)
-  * [Building](#building-)
-* [Acknowledgments](#acknowledgments-)
-* [License](#license-)
+- [Chucker](#chucker)
+  - [Getting Started 👣](#getting-started-)
+  - [Features 🧰](#features-)
+    - [Multi-Window 🚪](#multi-window-)
+  - [Configure 🎨](#configure-)
+    - [Redact-Header 👮‍♂️](#redact-header-️)
+    - [Decode-Body 📖](#decode-body-)
+    - [Notification Permission 🔔](#notification-permission-)
+  - [Migrating 🚗](#migrating-)
+  - [Snapshots 📦](#snapshots-)
+  - [FAQ ❓](#faq-)
+- [Sponsors 💸](#sponsors-)
+  - [Contributing 🤝](#contributing-)
+    - [Building 🛠](#building-)
+  - [Acknowledgments 🌸](#acknowledgments-)
+    - [Maintainers](#maintainers)
+    - [Thanks](#thanks)
+    - [Libraries](#libraries)
+  - [License 📄](#license-)
 
 Chucker simplifies the inspection of **HTTP(S) requests/responses** fired by your Android App. Chucker works as an **OkHttp Interceptor** persisting all those events inside your application, and providing a UI for inspecting and sharing their content.
 
-Apps using Chucker will display a **push notification** showing a summary of ongoing HTTP activity. Tapping on the notification launches the full Chucker UI. Apps can optionally suppress the notification, and launch the Chucker UI directly from within their own interface.
+Apps using Chucker will display a **notification** showing a summary of ongoing HTTP activity. Tapping on the notification launches the full Chucker UI. Apps can optionally suppress the notification, and launch the Chucker UI directly from within their own interface.
 
 <p align="center">
   <img src="assets/chucker-http.gif" alt="chucker http sample" width="50%"/>
@@ -31,37 +37,23 @@ Apps using Chucker will display a **push notification** showing a summary of ong
 
 ## Getting Started 👣
 
-Chucker is distributed through [Maven Central](https://search.maven.org/artifact/com.github.chuckerteam.chucker/library). To use it you need to add the following **Gradle dependency** to your `build.gradle` file of you android app module (NOT the root file).
+Chucker is distributed through [Maven Central](https://search.maven.org/artifact/com.github.chuckerteam.chucker/library). To use it you need to add the following **Gradle dependency** to the `build.gradle` file of your android app module (NOT the root file).
 
-Please note that you should add both the `library` and the the `library-no-op` variant to isolate Chucker from release builds as follows:
+Please note that you should add both the `library` and the `library-no-op` variant to isolate Chucker from release builds as follows:
 
 ```groovy
 dependencies {
-  debugImplementation "com.github.chuckerteam.chucker:library:3.5.2"
-  releaseImplementation "com.github.chuckerteam.chucker:library-no-op:3.5.2"
+  debugImplementation "com.github.chuckerteam.chucker:library:4.0.0"
+  releaseImplementation "com.github.chuckerteam.chucker:library-no-op:4.0.0"
 }
 ```
 
-To start using Chucker, just plug it a new `ChuckerInterceptor` to your OkHttp Client Builder:
+To start using Chucker, just plug in a new `ChuckerInterceptor` to your OkHttp Client Builder:
 
 ```kotlin
 val client = OkHttpClient.Builder()
                 .addInterceptor(ChuckerInterceptor(context))
                 .build()
-```
-
-[Enable Java 8 support](https://developer.android.com/studio/write/java8-support).
-
-```groovy
-android {
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-
-  // For Kotlin projects add also this line
-  kotlinOptions.jvmTarget = "1.8"
-}
 ```
 
 **That's it!** 🎉 Chucker will now record all HTTP interactions made by your OkHttp client.
@@ -96,7 +88,7 @@ You can customize chucker providing an instance of a `ChuckerCollector`:
 // Create the Collector
 val chuckerCollector = ChuckerCollector(
         context = this,
-        // Toggles visibility of the push notification
+        // Toggles visibility of the notification
         showNotification = true,
         // Allows to customize the retention period of collected data
         retentionPeriod = RetentionManager.Period.ONE_HOUR
@@ -117,7 +109,7 @@ val chuckerInterceptor = ChuckerInterceptor.Builder(context)
         // Use decoder when processing request and response bodies. When multiple decoders are installed they
         // are applied in an order they were added.
         .addBodyDecoder(decoder)
-        // Controls Android shortcut creation. Available in SNAPSHOTS versions only at the moment
+        // Controls Android shortcut creation.
         .createShortcut(true)
         .build()
 
@@ -142,12 +134,10 @@ interceptor.redactHeader("Auth-Token", "User-Session");
 
 ### Decode-Body 📖
 
-**Warning** This feature is available in SNAPSHOT builds at the moment, not in 3.5.2
-
-Chucker by default handles only plain text, Gzip compressed or Brotli compressed. If you use a binary format like, for example, Protobuf or Thrift it won't be automatically handled by Chucker. You can, however, install a custom decoder that is capable to read data from different encodings.
+Chucker by default handles only plain text, Gzip compressed or Brotli compressed. If you use a binary format like, for example, Protobuf or Thrift it won't be automatically handled by Chucker. You can, however, install a custom decoder that is capable of reading data from different encodings.
 
 ```kotlin
-object ProtoDecoder : BinaryDecoder {
+object ProtoDecoder : BodyDecoder {
     fun decodeRequest(request: Request, body: ByteString): String? = if (request.isExpectedProtoRequest) {
         decodeProtoBody(body)
     } else {
@@ -163,6 +153,20 @@ object ProtoDecoder : BinaryDecoder {
 interceptorBuilder.addBodyDecoder(ProtoDecoder).build()
 ```
 
+### Notification Permission 🔔
+
+Starting with Android 13, your apps needs to request the `android.permission.POST_NOTIFICATIONS` permission to the user in order to show notifications.
+As Chucker also shows notifications to show network activity you need to handle permission request depending on your app features.
+Without this permission Chucker will track network activity, but there will be no notifications on devices with Android 13 and newer.
+
+There are 2 possible cases:
+1. If your app is already sending notifications, you don't need to do anything as Chucker will
+show a notification as soon as the `android.permission.POST_NOTIFICATIONS` permission is granted to your app.
+1. If your app does not send notifications you would need to open Chucker directly (can be done via shortcut, which is added to your app by default when Chucker is added)
+and click `Allow` in the dialog with permission request. In case you don't allow this permission or dismiss that dialog by mistake, on every Chucker launch there will be
+a snackbar with a button to open your app settings where you can change permissions settings. Note, you need to grant `android.permission.POST_NOTIFICATIONS` to your app in Settings as there
+will be no separate app in Apps list in Settings.
+
 ## Migrating 🚗
 
 If you're migrating **from [Chuck](https://github.com/jgilfelt/chuck) to Chucker**, please refer to this [migration guide](/docs/migrating-from-chuck.md).
@@ -172,27 +176,27 @@ If you're migrating **from Chucker v2.0 to v3.0**, please expect multiple breaki
 
 ## Snapshots 📦
 
-Development of Chucker happens in the [`develop`](https://github.com/ChuckerTeam/chucker/tree/develop) branch. Every push to `develop` will trigger a publishing of a `SNAPSHOT` artifact for the upcoming version. You can get those snapshots artifacts directly from Sonatype with:
+Development of Chucker happens in the [`main`](https://github.com/ChuckerTeam/chucker/tree/main) branch. Every push to `main` will trigger a publishing of a `SNAPSHOT` artifact for the upcoming version. You can get those snapshots artifacts directly from Sonatype with:
 
 ```gradle
 repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 dependencies {
-  debugImplementation "com.github.chuckerteam.chucker:library:4.0.0-SNAPSHOT"
-  releaseImplementation "com.github.chuckerteam.chucker:library-no-op:4.0.0-SNAPSHOT"
+  debugImplementation "com.github.chuckerteam.chucker:library:4.1.0-SNAPSHOT"
+  releaseImplementation "com.github.chuckerteam.chucker:library-no-op:4.1.0-SNAPSHOT"
 }
 ```
 
-Moreover, you can still use [JitPack](https://jitpack.io/#ChuckerTeam/chucker) as it builds every branch. So the top of `develop` is available here:
+Moreover, you can still use [JitPack](https://jitpack.io/#ChuckerTeam/chucker) as it builds every branch. So the top of `main` is available here:
 
 ```gradle
 repositories {
     maven { url "https://jitpack.io" }
 }
 dependencies {
-  debugImplementation "com.github.chuckerteam.chucker:library:develop-SNAPSHOT"
-  releaseImplementation "com.github.chuckerteam.chucker:library-no-op:develop-SNAPSHOT"
+  debugImplementation "com.github.chuckerteam.chucker:library:main-SNAPSHOT"
+  releaseImplementation "com.github.chuckerteam.chucker:library-no-op:main-SNAPSHOT"
 }
 ```
 
@@ -215,7 +219,7 @@ In order to keep up with the changes in OkHttp we decided to bump its version in
 
 # Sponsors 💸
 
-Chucker is maintained and improved during nights, weekends and whenever team has free time. If you use Chucker in your project, please consider sponsoring us. This will help us buy a domain for a website we will have soon and also spend some money on charity. Additionally, sponsorthip will also help us understand better how valuable Chucker is for people's everyday work.
+Chucker is maintained and improved during nights, weekends and whenever team has free time. If you use Chucker in your project, please consider sponsoring us. This will help us buy a domain for a website we will have soon and also spend some money on charity. Additionally, sponsorship will also help us understand better how valuable Chucker is for people's everyday work.
 
 You can sponsor us by clicking `Sponsor` button.
 
@@ -262,7 +266,6 @@ This will make sure your CI checks will pass.
 Chucker is currently developed and maintained by the [ChuckerTeam](https://github.com/ChuckerTeam). When submitting a new PR, please ping one of:
 
 - [@cortinico](https://github.com/cortinico)
-- [@MiSikora](https://github.com/MiSikora)
 - [@olivierperez](https://github.com/olivierperez)
 - [@vbuberen](https://github.com/vbuberen)
 

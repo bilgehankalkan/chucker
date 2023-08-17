@@ -15,7 +15,7 @@ internal class RequestProcessor(
     private val collector: ChuckerCollector,
     private val maxContentLength: Long,
     private val headersToRedact: Set<String>,
-    private val bodyDecoders: List<BodyDecoder>,
+    private val bodyDecoders: List<BodyDecoder>
 ) {
     fun process(request: Request, transaction: HttpTransaction, requestTag: String?) {
         processMetadata(request, transaction, requestTag)
@@ -26,8 +26,12 @@ internal class RequestProcessor(
     private fun processMetadata(request: Request, transaction: HttpTransaction, requestTag: String?) {
         transaction.apply {
             requestHeadersSize = request.headers.byteCount()
-            setRequestHeaders(request.headers.redact(headersToRedact))
+            request.headers.redact(headersToRedact).let {
+                setRequestHeaders(it)
+                setGraphQlOperationName(it)
+            }
             populateUrl(request.url)
+            graphQlDetected = isGraphQLRequest(this.graphQlOperationName, request)
 
             requestDate = System.currentTimeMillis()
             method = request.method
@@ -76,4 +80,9 @@ internal class RequestProcessor(
                 null
             }
         }.firstOrNull()
+
+    private fun isGraphQLRequest(graphQLOperationName: String?, request: Request) =
+        graphQLOperationName != null ||
+            request.url.pathSegments.contains("graphql") ||
+            request.url.host.contains("graphql")
 }

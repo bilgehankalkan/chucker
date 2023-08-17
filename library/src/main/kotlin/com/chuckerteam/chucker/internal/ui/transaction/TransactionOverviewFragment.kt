@@ -51,7 +51,7 @@ internal class TransactionOverviewFragment : Fragment() {
             .observe(
                 viewLifecycleOwner,
                 { (transaction, encodeUrl) -> populateUI(transaction, encodeUrl) }
-        )
+            )
     }
 
     private fun populateUI(transaction: HttpTransaction?, encodeUrl: Boolean) {

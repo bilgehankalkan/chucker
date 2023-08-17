@@ -49,7 +49,10 @@ internal object HarTestUtils {
             responseHeadersSize = null,
             responseBody = """{"field": "value"}""",
             isResponseBodyEncoded = false,
-            responseImageData = null
+            responseImageData = null,
+            requestTag = null,
+            graphQlOperationName = null,
+            graphQlDetected = false
         )
     }
 
@@ -81,19 +84,19 @@ internal object HarTestUtils {
         return Content(createTransaction(method))
     }
 
-    internal fun createEntry(method: String): Entry? {
+    internal fun createEntry(method: String): Entry {
         return Entry(createTransaction(method))
     }
 
-    internal fun createPostData(method: String): PostData? {
+    internal fun createPostData(method: String): PostData {
         return PostData(createTransaction(method))
     }
 
-    internal fun createRequest(method: String): Request? {
+    internal fun createRequest(method: String): Request {
         return Request(createTransaction(method))
     }
 
-    internal fun createResponse(method: String): Response? {
+    internal fun createResponse(method: String): Response {
         return Response(createTransaction(method))
     }
 }

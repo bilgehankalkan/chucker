@@ -17,12 +17,29 @@ internal class HttpTransactionDatabaseRepository(private val database: ChuckerDa
     ): LiveData<List<HttpTransactionTuple>> {
         val pathQuery = if (path.isNotEmpty()) "%$path%" else "%"
         return if (requestTags.isEmpty()) {
-            transactionDao.getFilteredTuples("$code%", pathQuery)
+            transactionDao.getFilteredTuples(
+                "$code%",
+                pathQuery = pathQuery,
+                /**
+                 * Refer <a href='https://github.com/ChuckerTeam/chucker/issues/847">Issue #847</a> for
+                 * more context
+                 */
+                graphQlQuery = pathQuery
+            )
         } else {
             if (requestTags.any { it == null }) {
                 transactionDao.getFilteredTuplesWithNoRequestTags("$code%", pathQuery, requestTags)
             } else {
-                transactionDao.getFilteredTuples("$code%", pathQuery, requestTags)
+                transactionDao.getFilteredTuples(
+                    codeQuery = "$code%",
+                    pathQuery = pathQuery,
+                    requestTags = requestTags,
+                    /**
+                     * Refer <a href='https://github.com/ChuckerTeam/chucker/issues/847">Issue #847</a> for
+                     * more context
+                     */
+                    graphQlQuery = pathQuery
+                )
             }
         }
     }
@@ -66,4 +83,9 @@ internal class HttpTransactionDatabaseRepository(private val database: ChuckerDa
     override suspend fun getByUrl(url: String): HttpTransaction? = transactionDao.getByUrl(url)
 
     override suspend fun getAllRequestTags(): List<String> = transactionDao.getAllRequestTags()
+
+    override fun getTransactionsInTimeRange(minTimestamp: Long?): List<HttpTransaction> {
+        val timestamp = minTimestamp ?: 0L
+        return transactionDao.getTransactionsInTimeRange(timestamp)
+    }
 }
