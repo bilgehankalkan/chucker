@@ -18,6 +18,7 @@ import com.chuckerteam.chucker.internal.support.Sharable
 import com.chuckerteam.chucker.internal.support.TransactionCurlCommandSharable
 import com.chuckerteam.chucker.internal.support.TransactionDetailsHarSharable
 import com.chuckerteam.chucker.internal.support.TransactionDetailsSharable
+import com.chuckerteam.chucker.internal.support.applyWindowInsetsAsPadding
 import com.chuckerteam.chucker.internal.support.shareAsFile
 import com.chuckerteam.chucker.internal.support.shareAsUtf8Text
 import com.chuckerteam.chucker.internal.ui.BaseChuckerActivity
@@ -40,6 +41,7 @@ internal class TransactionActivity : BaseChuckerActivity() {
         with(transactionBinding) {
             setContentView(root)
             setSupportActionBar(toolbar)
+            appBarLayout.applyWindowInsetsAsPadding(left = true, top = true, right = true)
             setupViewPager(viewPager)
             tabLayout.setupWithViewPager(viewPager)
         }

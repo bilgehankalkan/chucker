@@ -32,6 +32,7 @@ import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.databinding.ChuckerFragmentTransactionPayloadBinding
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
 import com.chuckerteam.chucker.internal.support.Logger
+import com.chuckerteam.chucker.internal.support.applyWindowInsetsAsPadding
 import com.chuckerteam.chucker.internal.support.calculateLuminance
 import com.chuckerteam.chucker.internal.support.combineLatest
 import kotlinx.coroutines.Dispatchers
@@ -109,6 +110,7 @@ internal class TransactionPayloadFragment :
         payloadBinding.payloadRecyclerView.apply {
             setHasFixedSize(true)
             adapter = payloadAdapter
+            applyWindowInsetsAsPadding(left = true, right = true, bottom = true)
         }
 
         viewModel.transaction.combineLatest(viewModel.formatRequestBody).observe(

@@ -29,6 +29,7 @@ import com.chuckerteam.chucker.internal.support.Logger
 import com.chuckerteam.chucker.internal.support.Sharable
 import com.chuckerteam.chucker.internal.support.TransactionDetailsHarSharable
 import com.chuckerteam.chucker.internal.support.TransactionListDetailsSharable
+import com.chuckerteam.chucker.internal.support.applyWindowInsetsAsPadding
 import com.chuckerteam.chucker.internal.support.shareAsFile
 import com.chuckerteam.chucker.internal.support.showDialog
 import com.chuckerteam.chucker.internal.ui.filter.FilterDialogFragment
@@ -75,6 +76,9 @@ internal class MainActivity :
             setContentView(root)
             setSupportActionBar(toolbar)
             toolbar.subtitle = applicationName
+
+            appBarLayout.applyWindowInsetsAsPadding(left = true, top = true, right = true)
+            transactionsRecyclerView.applyWindowInsetsAsPadding(left = true, right = true, bottom = true)
 
             tutorialLink.movementMethod = LinkMovementMethod.getInstance()
             transactionsRecyclerView.apply {
