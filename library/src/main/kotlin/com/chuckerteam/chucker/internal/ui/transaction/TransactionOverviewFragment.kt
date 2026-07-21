@@ -11,6 +11,7 @@ import androidx.fragment.app.activityViewModels
 import com.chuckerteam.chucker.R
 import com.chuckerteam.chucker.databinding.ChuckerFragmentTransactionOverviewBinding
 import com.chuckerteam.chucker.internal.data.entity.HttpTransaction
+import com.chuckerteam.chucker.internal.support.applyWindowInsetsAsPadding
 import com.chuckerteam.chucker.internal.support.combineLatest
 
 internal class TransactionOverviewFragment : Fragment() {
@@ -45,6 +46,8 @@ internal class TransactionOverviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        overviewBinding.root.applyWindowInsetsAsPadding(left = true, right = true, bottom = true)
 
         viewModel.transaction
             .combineLatest(viewModel.encodeUrl)
